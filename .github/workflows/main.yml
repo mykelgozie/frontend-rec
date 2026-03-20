@@ -29,3 +29,20 @@ jobs:
 
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/ecommerce-frontend:latest
+
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/ecommerce-frontend:latest
+          docker stop ecommerce-frontend || true
+          docker rm ecommerce-frontend || true
+          docker run -d \
+            --name ecommerce-frontend \
+            --restart always \
+            -p 80:80 \
+            ${{ secrets.DOCKER_USERNAME }}/ecommerce-frontend:latest
